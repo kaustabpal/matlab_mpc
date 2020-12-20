@@ -5,11 +5,13 @@ dt = 0.1;
 init_state = [0,0,0]; % initial state [x,y,theta]
 goal_state = [80,80,0.5]; % goal state [x,y,theta]
 cur_state = init_state; % current state. Initialize as initial state.
+vp = 0;  % starting velocity
+wp = 0; % starting angular velocity
 
 plan_horizon = 50; % plan for 50 timesteps
 update_horizon = 10; % update controls after 20 timesteps. (20% of plan_horizon)
 
-v0 = rand(plan_horizon,1); % initial guess of velocity
+v0 = normrnd(5,2.5,plan_horizon,1); % initial guess of velocity todo mean=10
 w0 = rand(plan_horizon,1); % initial guess of angular velocity
 
 controls = [v0, w0];
@@ -20,11 +22,11 @@ trace_path = [cur_state];
 
 % Initialize video
 myVideo = VideoWriter('data/mpc'); %open video file
-myVideo.FrameRate = 10;  %can adjust this, 5 - 10 works well for me
+myVideo.FrameRate = 15;  %can adjust this, 5 - 10 works well for me
 open(myVideo)
 f0 = figure;
 while(norm(cur_state-goal_state)>0.5)
-    controls = predict_controls(plan_horizon,cur_state,goal_state,v0,w0,dt); %todo
+    controls = predict_controls(plan_horizon,cur_state,goal_state,vp,wp,v0,w0,dt); %todo
    for i=1:update_horizon
        if(norm(cur_state-goal_state)<=0.5)
            break;
@@ -45,6 +47,8 @@ while(norm(cur_state-goal_state)>0.5)
            writeVideo(myVideo, frame);
            hold off;
        end
+       vp = controls(update_horizon,1);
+       wp = controls(update_horizon,2);
    end
 end
 close(myVideo)
@@ -60,6 +64,7 @@ close(f1)
 
 f2 = figure;
 plot(v_list,'red')
+ylim([0 21]);
 title("Velocity vs Timesteps")
 xlabel('Timesteps')
 ylabel('Velocity')
@@ -68,6 +73,7 @@ close(f2)
 
 f3 = figure;
 plot(w_list,'blue')
+ylim([-0.5 0.5]);
 title("Angular Velocity vs Timesteps")
 xlabel('Timesteps')
 ylabel('Angular Velocity')
