@@ -11,7 +11,7 @@ wp = 0; % starting angular velocity
 plan_horizon = 50; % plan for 50 timesteps
 update_horizon = 10; % update controls after 20 timesteps. (20% of plan_horizon)
 
-v0 = normrnd(5,2.5,plan_horizon,1); % initial guess of velocity todo mean=10
+v0 = normrnd(5,2.5,plan_horizon,1); % initial guess of velocity
 w0 = rand(plan_horizon,1); % initial guess of angular velocity
 
 controls = [v0, w0];
@@ -26,12 +26,12 @@ myVideo.FrameRate = 15;  %can adjust this, 5 - 10 works well for me
 open(myVideo)
 f0 = figure;
 while(norm(cur_state-goal_state)>0.5)
-    controls = predict_controls(plan_horizon,cur_state,goal_state,vp,wp,v0,w0,dt); %todo
+    controls = predict_controls(plan_horizon,cur_state,goal_state,vp,wp,v0,w0,dt);
    for i=1:update_horizon
        if(norm(cur_state-goal_state)<=0.5)
            break;
        else
-           cur_state = nonhn_update(cur_state,controls(i,1),controls(i,2),dt) %todo   
+           cur_state = nonhn_update(cur_state,controls(i,1),controls(i,2),dt) 
            trace_path = [trace_path;cur_state];
            v_list = [v_list, controls(i,1)];
            w_list = [w_list, controls(i,2)];           
