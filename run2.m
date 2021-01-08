@@ -20,33 +20,46 @@ v_list = [];
 w_list = [];
 trace_path = [cur_state];
 
+obstacle = [19.8066,9.6890,1];
+obs_v = 0;
+obs_w = 0;
+agent_radius = 0.5; % actual agent radius is 0.5. I have considered 1 to have more space for obstacle avoidance.
+obstacle_radius = 1;
 % Initialize video
 myVideo = VideoWriter('data/mpc'); %open video file
 myVideo.FrameRate = 15;  %can adjust this, 5 - 10 works well for me
 open(myVideo)
 f0 = figure;
-while(norm(cur_state-goal_state)>0.5)
-    controls = predict_controls(plan_horizon,cur_state,goal_state,vp,wp,v0,w0,dt);
+k = 0;
+while(norm(cur_state-goal_state)>1.5)
+   controls = predict_controls(plan_horizon,cur_state,goal_state,vp,wp,controls(:,1),controls(:,2),agent_radius,obstacle_radius,obstacle,obs_v,obs_w,dt);
    for i=1:update_horizon
-       if(norm(cur_state-goal_state)<=0.5)
-           break;
-       else
-           cur_state = nonhn_update(cur_state,controls(i,1),controls(i,2),dt) 
+        if(norm(cur_state-goal_state)<=1.5)
+            break;
+        else
+           k = k+1;
+           cur_state = nonhn_update(cur_state,controls(i,1),controls(i,2),dt)
+           [obstacle, obs_v, obs_w] = dynamic_obs(obstacle,k); 
            trace_path = [trace_path;cur_state];
            v_list = [v_list, controls(i,1)];
            w_list = [w_list, controls(i,2)];           
 %            plot(cur_state(1),cur_state(2),'o');
-           hold on;
+           
            clf(f0)
+           hold on;
            plot([init_state(1),goal_state(1)],[init_state(2),goal_state(2)],'rx')
+           plot([init_state(1),goal_state(1)],[init_state(2),goal_state(2)],'--k')
            viscircles([cur_state(1),cur_state(2)], 0.5,'Color','b');
+           [x_traj,y_traj] = plottraj(cur_state, controls);
+           plot(x_traj,y_traj,'b.');
+           viscircles([obstacle(1),obstacle(2)], 1,'Color','r');
            xlim([init_state(1)-10 goal_state(1)+10]);
            ylim([init_state(2)-10 goal_state(2)+10]);
            pause(1/60);
            frame = getframe(gcf); %get frame
            writeVideo(myVideo, frame);
            hold off;
-       end
+        end
        vp = controls(update_horizon,1);
        wp = controls(update_horizon,2);
    end
